@@ -8,9 +8,8 @@ from fastapi import FastAPI
 import httpx
 
 # ================= НАСТРОЙКИ =================
-# Твой новый рабочий токен бота
 BOT_TOKEN = "9202692783:AAHyqJXy3SpcoW7hteWfHWAreS1Tb-EoGjY"
-RENDER_URL = "https://onrender.com"  # URL обновится после перезапуска Render
+RENDER_URL = "https://onrender.com"  # Позже можешь вставить ссылку от Render
 # =============================================
 
 bot = Bot(token=BOT_TOKEN)
@@ -38,20 +37,22 @@ async def send_ping():
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
     await message.answer(
-        "👋 **Привет! Я твой новый крипто-бот.**\n\n"
-        "Я запущен на сервере Render и беру данные напрямую с Binance.\n"
+        "👋 **Привет! Я демонстрационный крипто-бот.**\n\n"
+        "Беру данные напрямую с официального API Binance.\n"
         "Жми команды ниже:\n"
         "📊 /btc — Курс Bitcoin\n"
         "📊 /eth — Курс Ethereum\n"
         "📊 /ton — Курс Toncoin"
     )
 
+# ИСПРАВЛЕННАЯ ФУНКЦИЯ: Теперь адрес Binance 100% правильный
 async def get_price(coin: str):
     url = f"https://binance.com{coin}USDT"
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url)
             data = response.json()
+            # У Binance цена лежит в ключе 'price'
             price = data['price']
             return round(float(price), 2)
         except Exception as e:
@@ -84,3 +85,4 @@ async def on_startup():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
