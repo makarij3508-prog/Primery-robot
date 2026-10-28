@@ -1,15 +1,17 @@
 import asyncio
 import logging
 import os
+import random
+from datetime import datetime
 from telethon import TelegramClient, events
 from fastapi import FastAPI
 
-# ИСПОЛЬЗУЕМ ВЕЧНЫЕ ОФИЦИАЛЬНЫЕ КЛЮЧИ TELEGRAM DESKTOP
+# Намертво вшитые официальные ключи Telegram Desktop
 API_ID = 2040
 API_HASH = "b18441a1ff607e10a989891a5625ab74"
-
 BOT_TOKEN = "9066924866:AAG0pZxQRvYGCl6v1noL0HIPV5vG9BFs6NY"
 
+# Создаем сессии без использования переменных окружения
 user_client = TelegramClient('session_upravlyalka', API_ID, API_HASH)
 bot_client = TelegramClient('bot_bridge', API_ID, API_HASH)
 
