@@ -51,9 +51,11 @@ async def get_price(coin: str):
         try:
             response = await client.get(url)
             data = response.json()
+            # ИСПРАВЛЕНО: убрали лишний ['list']
             price = data['result']['list'][0]['lastPrice']
             return round(float(price), 2)
-        except Exception:
+        except Exception as e:
+            logging.error(f"Ошибка API: {e}")
             return None
 
 @dp.message(Command("btc"))
