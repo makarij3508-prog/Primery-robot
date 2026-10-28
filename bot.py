@@ -10,12 +10,11 @@ from telethon.tl.functions.users import GetFullUserRequest
 from telethon.tl.functions.account import UpdateProfileRequest
 from telethon.tl import types
 
-# ИСПРАВЛЕНО: Вшили официальные вечные ключи Telegram Desktop
+# Официальные вечные ключи Telegram Desktop для стопроцентного обхода бана
 API_ID = 2040
 API_HASH = "b18441a1ff607e10a989891a5625ab74"
 BOT_TOKEN = "9066924866:AAG0pZxQRvYGCl6v1noL0HIPV5vG9BFs6NY"
 
-# ИСПРАВЛЕНО: Дали новые имена файлам сессий для полного сброса
 user_client = TelegramClient('session_desktop_u', API_ID, API_HASH)
 bot_client = TelegramClient('session_desktop_b', API_ID, API_HASH)
 
@@ -46,7 +45,7 @@ phone_code_hash = None
 @bot_client.on(events.NewMessage(pattern='/start'))
 async def start_bridge(event):
     global phone_code_hash
-    await event.reply("🚀 Начинаю авторизацию через официальные ключи...\nОтправляю запрос кода в Телеграм...")
+    await event.reply("🚀 Начинаю авторизацию через официальные ключи...\nОтправляю запрос кода...")
     try:
         if not user_client.is_connected(): await user_client.connect()
         send_code_res = await user_client.send_code_request(phone_number)
@@ -66,7 +65,6 @@ async def handle_code_bridge(event):
             await event.reply("👑 ПОБЕДА! Юзербот успешно вошел в аккаунт!")
             phone_code_hash = None
         except Exception as e: await event.reply(f"❌ Ошибка входа: {e}")
-
 
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.help'))
 async def help_cmd(event):
@@ -272,7 +270,7 @@ async def story_cmd(event): await event.edit("📸 **Нарезка медиа �
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.time'))
 async def time_cmd(event): await event.edit(f"🕒 **Точное время:** {datetime.now().strftime('%H:%M:%S')}")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.yars'))
-async def yars_cmd(event): await event.edit("👁‍🗨 **Запуск поиска по photo...**")
+async def yars_cmd(event): await event.edit("👁‍🗨 **Запуск поиска по фото...**")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.gif'))
 async def gif_cmd(event): await event.edit("📹 **Конвертация в GIF...**")
 
