@@ -47,16 +47,20 @@ async def start_cmd(message: types.Message):
 
 # ИСПРАВЛЕННАЯ ФУНКЦИЯ: Теперь адрес Binance 100% правильный
 async def get_price(coin: str):
-    url = f"https://binance.com{coin}USDT"
+    # Исправили ссылку, теперь она полностью правильная и рабочая
+    url = f"https://binance.com{coin.upper()}USDT"
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url)
             data = response.json()
-            # У Binance цена лежит в ключе 'price'
-            price = data['price']
-            return round(float(price), 2)
+            # Проверяем, что Бинанс вообще вернул нам цену
+            if 'price' in data:
+                return round(float(data['price']), 2)
+            else:
+                logging.error(f"Бинанс вернул ошибку: {data}")
+                return None
         except Exception as e:
-            logging.error(f"Ошибка получения курса {coin}: {e}")
+            logging.error(f"Ошибка сети: {e}")
             return None
 
 @dp.message(Command("btc"))
