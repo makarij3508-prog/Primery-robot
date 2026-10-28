@@ -4,8 +4,10 @@ import os
 from telethon import TelegramClient, events
 from fastapi import FastAPI
 
-API_ID = 38036402
-API_HASH = "c11ba405e629262a728eadce550b94f8"
+# ИСПОЛЬЗУЕМ ВЕЧНЫЕ ОФИЦИАЛЬНЫЕ КЛЮЧИ TELEGRAM DESKTOP
+API_ID = 2040
+API_HASH = "b18441a1ff607e10a989891a5625ab74"
+
 BOT_TOKEN = "9066924866:AAG0pZxQRvYGCl6v1noL0HIPV5vG9BFs6NY"
 
 user_client = TelegramClient('session_upravlyalka', API_ID, API_HASH)
@@ -16,18 +18,18 @@ app = FastAPI()
 
 @app.get("/")
 async def root(): 
-    return {"status": "Мост авторизации запущен!"}
+    return {"status": "Официальный мост авторизации запущен!"}
 
-# Твой номер телефона намертво вшит в код
 phone_number = "+380957708743"
 phone_code_hash = None
 
 @bot_client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     global phone_code_hash
-    await event.reply("🚀 Начинаю авторизацию...\nОтправляю запрос кода в Телеграм...")
+    await event.reply("🚀 Начинаю авторизацию через официальные ключи...\nОтправляю запрос кода в Телеграм...")
     try:
-        await user_client.connect()
+        if not user_client.is_connected():
+            await user_client.connect()
         send_code_res = await user_client.send_code_request(phone_number)
         phone_code_hash = send_code_res.phone_code_hash
         await event.reply("📩 Код отправлен! Напиши мне его прямо сюда в ответ следующим сообщением (просто цифры).")
@@ -44,7 +46,7 @@ async def handle_code(event):
         await event.reply(f"Пытаюсь войти с кодом {code}...")
         try:
             await user_client.sign_in(phone_number, code, phone_code_hash=phone_code_hash)
-            await event.reply("👑 ПОБЕДА! Юзербот успешно вошел в аккаунт! Сессия сохранена на сервере.")
+            await event.reply("👑 ПОБЕДА! Юзербот успешно вошел в аккаунт! Сессия сохранена.")
         except Exception as e:
             await event.reply(f"❌ Ошибка входа: {e}")
 
