@@ -189,11 +189,11 @@ async def leet_cmd(event):
     t = event.pattern_match.group(1).lower()
     dic = {'а':'4','е':'3','и':'1','о':'0','т':'7','с':'c','в':'8'}
     await event.edit("".join([dic[c] if c in dic else c for c in t]))
-@client.on(events.NewMessage(outgoing=True, pattern=r'\.kawaii (.+)'))
+@user_client.on(events.NewMessage(outgoing=True, pattern=r'\.kawaii (.+)'))
 async def kaw_h(event): await event.edit(f"✨ {event.pattern_match.group(1)} (о´∀`о) 💕")
-@client.on(events.NewMessage(outgoing=True, pattern=r'\.tsundere (.+)'))
+@user_client.on(events.NewMessage(outgoing=True, pattern=r'\.tsundere (.+)'))
 async def tsun_h(event): await event.edit(f"💢 {event.pattern_match.group(1)}... Б-бака! 🙄")
-@client.on(events.NewMessage(outgoing=True, pattern=r'\.yandere (.+)'))
+@user_client.on(events.NewMessage(outgoing=True, pattern=r'\.yandere (.+)'))
 async def yan_h(event): await event.edit(f"👁‍🗨 {event.pattern_match.group(1)}... Ты же будешь со мной вечно? 🔪")
 
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.bw'))
@@ -216,7 +216,7 @@ async def flip_cmd(event): await event.edit(f"🪙 Выпало: **{random.choic
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.chk'))
 async def chk_cmd(event): await event.edit("🏁 **[ШАШКИ]**\n\n🔴🟪🔴🟪🔴\nТвой ход!")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.ttt'))
-async def ttt_cmd(event): await event.edit("❌⭕ orient **КРЕСТИКИ-НОЛИКИ**")
+async def ttt_cmd(event): await event.edit("❌⭕️ **КРЕСТИКИ-НОЛИКИ**")
 
 async def make_dox(event):
     if not event.is_reply: return "⚠️ Ответь на смс цели!"
@@ -302,7 +302,7 @@ async def background_handlers(event):
         except: pass
         return
     if event.is_private:
-        if afk_enabled: await event.respond(f"💤 AFK: {afk_reason}")
+        if afk_enabled: await event.respond(f"💤 AFK. Причина: {afk_reason}")
         elif autoresponder_enabled: await event.respond(autoresponder_text)
 
 @user_client.on(events.NewMessage(outgoing=True))
@@ -310,7 +310,7 @@ async def afk_reset(event):
     global afk_enabled
     if afk_enabled and not event.text.startswith(r'.afk'):
         afk_enabled = False
-        msg = await event.respond("⚡️ **Режим AFK отключен.**")
+        msg = await event.respond("⚡️ **Режим AFK автоматически отключен.**")
         await asyncio.sleep(2); await msg.delete()
 
 if __name__ == "__main__":
