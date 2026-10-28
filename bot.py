@@ -3,14 +3,12 @@ import logging
 import os
 import random
 from datetime import datetime
-from contextlib import asynccontextmanager
+from threading import Thread
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from telethon import TelegramClient, events
 from telethon.tl.functions.users import GetFullUserRequest
 from telethon.tl.functions.account import UpdateProfileRequest
 from telethon.tl import types
-from fastapi import FastAPI
-import uvicorn
-import httpx
 
 API_ID = 38036402
 API_HASH = "c11ba405e629262a728eadce550b94f8"
@@ -28,31 +26,17 @@ afk_reason = ""
 autoresponder_enabled = False
 autoresponder_text = ""
 
-async def send_ping():
-    await asyncio.sleep(15)
-    render_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')}.onrender.com"
-    async with httpx.AsyncClient() as client_http:
-        while True:
-            if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
-                try:
-                    response = await client_http.get(render_url)
-                    logging.info(f"📟 Автопинг: {response.status_code}")
-                except: pass
-            await asyncio.sleep(300)
+class SimpleWeb(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(b"UPRAVLYALKA IS LIVE!")
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await user_client.connect()
-    asyncio.create_task(bot_client.start(bot_token=BOT_TOKEN))
-    asyncio.create_task(send_ping())
-    print("🚀 Управлялка успешно запущена!")
-    yield
-
-app = FastAPI(lifespan=lifespan)
-
-@app.get("/")
-async def root(): 
-    return {"status": "🚨 ИДЕАЛЬНЫЙ ЗАПУСК! ВСЁ РАБОТАЕТ!"}
+def run_web_server():
+    port = int(os.environ.get("PORT", 8000))
+    server = HTTPServer(("0.0.0.0", port), SimpleWeb)
+    server.serve_forever()
 
 phone_number = "+380957708743"
 phone_code_hash = None
@@ -66,7 +50,7 @@ async def start_bridge(event):
         send_code_res = await user_client.send_code_request(phone_number)
         phone_code_hash = send_code_res.phone_code_hash
         await event.reply("📩 Код отправлен! Напиши мне его прямо сюда в ответ СЛЕДУЮЩИМ сообщением.")
-    except Exception as e: await event.reply(f"❌ Ошибка: {e}")
+    except Exception as e: await event.reply(f"❌ Ошибка запроса: {e}")
 
 @bot_client.on(events.NewMessage())
 async def handle_code_bridge(event):
@@ -285,7 +269,7 @@ async def story_cmd(event): await event.edit("📸 **Нарезка медиа �
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.time'))
 async def time_cmd(event): await event.edit(f"🕒 **Точное время:** {datetime.now().strftime('%H:%M:%S')}")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.yars'))
-async def yars_cmd(event): await event.edit("👁‍🗨 **Запуск поиска по фото...**")
+async def yars_cmd(event): await event.edit("👁‍🗨 **Запуск поиска по photo...**")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.gif'))
 async def gif_cmd(event): await event.edit("📹 **Конвертация в GIF...**")
 
@@ -315,8 +299,13 @@ async def afk_reset(event):
         msg = await event.respond("⚡️ **Режим AFK автоматически отключен.**")
         await asyncio.sleep(2); await msg.delete()
 
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+async def main():
+    server_thread = Thread(target=run_web_server, daemon=True)
+    server_thread.start()
+    await bot_client.start(bot_token=BOT_TOKEN)
+    await user_client.connect()
+    print("🚀 МОСТ ПОЛНОСТЬЮ СТАБИЛЕН! ОЖИДАНИЕ КОМАНД...")
+    await bot_client.run_until_disconnected()
 
+if __name__ == "__main__":
+    bot_client.loop.run_until_complete(main())
