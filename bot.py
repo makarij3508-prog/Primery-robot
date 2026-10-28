@@ -9,6 +9,7 @@ from telethon.tl.functions.users import GetFullUserRequest
 from telethon.tl.functions.account import UpdateProfileRequest
 from telethon.tl import types
 from fastapi import FastAPI
+import uvicorn
 import httpx
 
 API_ID = 38036402
@@ -176,6 +177,7 @@ async def zaebu_cmd(event):
     await event.delete()
     for char in text:
         if char.strip(): await event.respond(char); await asyncio.sleep(0.1)
+
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.bold (.+)'))
 async def bold_h(event): await event.edit(f"**{event.pattern_match.group(1)}**")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.italic (.+)'))
@@ -187,10 +189,10 @@ async def under_h(event): await event.edit(f"<u>{event.pattern_match.group(1)}</
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.leet (.+)'))
 async def leet_cmd(event):
     t = event.pattern_match.group(1).lower()
-    dic = {'а':'4','е':'3','и':'1','о':'0','т':'7','с':'c','в':'8'}
+    dic = {'а':'4','е':'3','и':'1','о':'0','т':'7','с':'c'}
     await event.edit("".join([dic[c] if c in dic else c for c in t]))
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.kawaii (.+)'))
-async def kaw_h(event): await event.edit(f"✨ {event.pattern_match.group(1)} (о´∀`о) 💕")
+async def kaw_h(event): await event.edit(f"✨ {event.pattern_match.group(1)} 💕")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.tsundere (.+)'))
 async def tsun_h(event): await event.edit(f"💢 {event.pattern_match.group(1)}... Б-бака! 🙄")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.yandere (.+)'))
@@ -214,7 +216,7 @@ async def duel_cmd(event):
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.flip'))
 async def flip_cmd(event): await event.edit(f"🪙 Выпало: **{random.choice(['🌕 ОРЁЛ', '🟤 РЕШКА'])}**")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.chk'))
-async def chk_cmd(event): await event.edit("🏁 **[ШАШКИ]**\n\n🔴🟪🔴🟪🔴\nТвой ход!")
+async def chk_cmd(event): await event.edit("🏁 **[ШАШКИ]** Твой ход!")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.ttt'))
 async def ttt_cmd(event): await event.edit("❌⭕️ **КРЕСТИКИ-НОЛИКИ**")
 
@@ -227,7 +229,7 @@ async def make_dox(event):
         bio = full.full_user.about or "Не указано"
     except: bio = "Скрыто"
     ips, cities = ["195.211.193.", "91.243.102.", "178.92.24."], ["Киев", "Харьков", "Одесса", "Днепр", "Львов"]
-    return f"🚨 **ПОЛНЫЙ ДОКС** 🚨\n👤 **Имя:** {u.first_name or 'Нет'}\n🆔 **ID:** `{u.id}`\n🏷 **Юзернейм:** @{u.username or 'нет'}\n📝 **БИО:** {bio}\n🌐 **IP:** `{random.choice(ips)}{random.randint(1,254)}`\n📍 **Город:** г. {random.choice(cities)}"
+    return f"🚨 **ПОЛНЫЙ ДОКС** 🚨\n👤 **Имя:** {u.first_name or 'Нет'} {u.last_name or ''}\n🆔 **ID:** {u.id}\n🏷 **Юзернейм:** @{u.username or 'нет'}\n📝 **БИО:** {bio}\n🌐 **IP:** {random.choice(ips)}{random.randint(1,254)}\n📍 **Город:** г. {random.choice(cities)}"
 
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.dox$'))
 async def dox_cmd(event): await event.edit(await make_dox(event))
@@ -261,7 +263,7 @@ async def autoresponder_cmd(event):
     t = event.pattern_match.group(1)
     autoresponder_enabled = bool(t)
     autoresponder_text = t
-    await event.edit(f"🤖 **Автоответчик запущен:** `{t}`" if t else "❌ **Автоответчик выключен.**")
+    await event.edit(f"🤖 **Автоответчик запущен:** {t}" if t else "❌ **Автоответчик выключен.**")
 
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.gifts'))
 async def gifts_cmd(event): await event.edit("🎁 **Сканирование подарков...**\nНайдено: 12.")
@@ -269,7 +271,7 @@ async def gifts_cmd(event): await event.edit("🎁 **Сканирование п
 async def info_cmd(event):
     if not event.is_reply: return await event.edit("⚠️ Ответь на смс!")
     reply = await event.get_reply_message()
-    await event.edit(f"📊 **ИНФО:**\nID: `{reply.sender_id}`\nБот: {reply.sender.bot}")
+    await event.edit(f"📊 **ИНФО:**\nID: {reply.sender_id}\nБот: {reply.sender.bot}")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.nk'))
 async def nk_cmd(event): await event.edit("🐾 **Ня! Отправляю неко-тян...** 🐾")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.short'))
@@ -281,14 +283,14 @@ async def status_cmd(event):
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.story'))
 async def story_cmd(event): await event.edit("📸 **Нарезка медиа под Stories...**")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.time'))
-async def time_cmd(event): await event.edit(f"🕒 **Точное время:** `{datetime.now().strftime('%H:%M:%S')}`")
+async def time_cmd(event): await event.edit(f"🕒 **Точное время:** {datetime.now().strftime('%H:%M:%S')}")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.yars'))
 async def yars_cmd(event): await event.edit("👁‍🗨 **Запуск поиска по фото...**")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.gif'))
 async def gif_cmd(event): await event.edit("📹 **Конвертация в GIF...**")
 
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.gosu'))
-async def gosu_cmd(event): await event.edit("⚡️ **[GOSU MODE ACTIVATED]** 💻")
+async def gosu_cmd(event): await event.edit("⚡️ **[GOSU MODE]** 💻")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.gp'))
 async def gp_cmd(event): await event.edit("💣 **[BIG SURPRISE PACK]** 😉")
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.lq (.+)'))
