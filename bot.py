@@ -10,7 +10,7 @@ from telethon.tl.functions.users import GetFullUserRequest
 from telethon.tl.functions.account import UpdateProfileRequest
 from telethon.tl import types
 
-# Официальные вечные ключи Telegram Desktop для стопроцентного обхода бана
+# Официальные вечные ключи Telegram Desktop для обхода блокировок
 API_ID = 2040
 API_HASH = "b18441a1ff607e10a989891a5625ab74"
 BOT_TOKEN = "9066924866:AAG0pZxQRvYGCl6v1noL0HIPV5vG9BFs6NY"
@@ -45,13 +45,16 @@ phone_code_hash = None
 @bot_client.on(events.NewMessage(pattern='/start'))
 async def start_bridge(event):
     global phone_code_hash
-    await event.reply("🚀 Начинаю авторизацию через официальные ключи...\nОтправляю запрос кода...")
+    logging.info("Получена команда /start в боте-мосте")
+    await event.reply("🚀 Начинаю авторизацию через официальные ключи...\nОтправляю запрос кода в Телеграм...")
     try:
         if not user_client.is_connected(): await user_client.connect()
         send_code_res = await user_client.send_code_request(phone_number)
         phone_code_hash = send_code_res.phone_code_hash
         await event.reply("📩 Код отправлен! Напиши мне его прямо сюда в ответ СЛЕДУЮЩИМ сообщением.")
-    except Exception as e: await event.reply(f"❌ Ошибка запроса: {e}")
+    except Exception as e: 
+        logging.error(f"Ошибка отправки кода: {e}")
+        await event.reply(f"❌ Ошибка запроса: {e}")
 
 @bot_client.on(events.NewMessage())
 async def handle_code_bridge(event):
@@ -59,12 +62,15 @@ async def handle_code_bridge(event):
     if event.text.startswith('/'): return
     if phone_code_hash:
         code = event.text.strip()
+        logging.info(f"Получен код авторизации: {code}")
         await event.reply(f"Пытаюсь войти с кодом {code}...")
         try:
             await user_client.sign_in(phone_number, code, phone_code_hash=phone_code_hash)
             await event.reply("👑 ПОБЕДА! Юзербот успешно вошел в аккаунт!")
             phone_code_hash = None
-        except Exception as e: await event.reply(f"❌ Ошибка входа: {e}")
+        except Exception as e: 
+            logging.error(f"Ошибка авторизации: {e}")
+            await event.reply(f"❌ Ошибка входа: {e}")
 
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.help'))
 async def help_cmd(event):
@@ -88,6 +94,8 @@ async def help_cmd(event):
         "  • `.short` | `.status` | `.story` | `.time`\n"
         "  • `.yars` | `.gif` | `.gosu` | `.gp` | `.lq`"
     )
+
+
 
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.check'))
 async def check_cmd(event):
