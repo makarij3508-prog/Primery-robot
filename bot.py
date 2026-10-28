@@ -44,19 +44,19 @@ async def start_cmd(message: types.Message):
         "📊 /eth — Курс Ethereum\n"
         "📊 /ton — Курс Toncoin"
     )
-
 async def get_price(coin: str):
     url = f"https://bybit.com{coin}USDT"
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url)
             data = response.json()
-            # ИСПРАВЛЕНО: убрали лишний ['list']
+            # Берем цену из правильного места в ответе Bybit
             price = data['result']['list'][0]['lastPrice']
             return round(float(price), 2)
         except Exception as e:
-            logging.error(f"Ошибка API: {e}")
+            logging.error(f"Ошибка получения курса {coin}: {e}")
             return None
+
 
 @dp.message(Command("btc"))
 async def btc_price(message: types.Message):
