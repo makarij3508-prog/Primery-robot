@@ -10,12 +10,14 @@ from telethon.tl.functions.users import GetFullUserRequest
 from telethon.tl.functions.account import UpdateProfileRequest
 from telethon.tl import types
 
-API_ID = 38036402
-API_HASH = "c11ba405e629262a728eadce550b94f8"
+# ИСПРАВЛЕНО: Вшили официальные вечные ключи Telegram Desktop
+API_ID = 2040
+API_HASH = "b18441a1ff607e10a989891a5625ab74"
 BOT_TOKEN = "9066924866:AAG0pZxQRvYGCl6v1noL0HIPV5vG9BFs6NY"
 
-user_client = TelegramClient('final_user_session', API_ID, API_HASH)
-bot_client = TelegramClient('final_bridge_session', API_ID, API_HASH)
+# ИСПРАВЛЕНО: Дали новые имена файлам сессий для полного сброса
+user_client = TelegramClient('session_desktop_u', API_ID, API_HASH)
+bot_client = TelegramClient('session_desktop_b', API_ID, API_HASH)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -44,7 +46,7 @@ phone_code_hash = None
 @bot_client.on(events.NewMessage(pattern='/start'))
 async def start_bridge(event):
     global phone_code_hash
-    await event.reply("🚀 Начинаю авторизацию...\nОтправляю запрос кода в Телеграм...")
+    await event.reply("🚀 Начинаю авторизацию через официальные ключи...\nОтправляю запрос кода в Телеграм...")
     try:
         if not user_client.is_connected(): await user_client.connect()
         send_code_res = await user_client.send_code_request(phone_number)
@@ -64,6 +66,7 @@ async def handle_code_bridge(event):
             await event.reply("👑 ПОБЕДА! Юзербот успешно вошел в аккаунт!")
             phone_code_hash = None
         except Exception as e: await event.reply(f"❌ Ошибка входа: {e}")
+
 
 @user_client.on(events.NewMessage(outgoing=True, pattern=r'\.help'))
 async def help_cmd(event):
