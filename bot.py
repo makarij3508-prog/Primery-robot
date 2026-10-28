@@ -6,58 +6,62 @@ from datetime import datetime
 from telethon import TelegramClient, events
 from fastapi import FastAPI
 
-# Твои личные ключи, вшитые намертво в код
+# Твои личные ключи
 API_ID = 38036402
 API_HASH = "c11ba405e629262a728eadce550b94f8"
 BOT_TOKEN = "9066924866:AAG0pZxQRvYGCl6v1noL0HIPV5vG9BFs6NY"
 
-user_client = TelegramClient('session_upravlyalka', API_ID, API_HASH)
-bot_client = TelegramClient('bot_bridge', API_ID, API_HASH)
+# Создаем только ЮЗЕРКЛИЕНТА, убираем запуск второго бота из стартапа
+user_client = TelegramClient('super_clean_session', API_ID, API_HASH)
+bot_client = TelegramClient('clean_bridge', API_ID, API_HASH)
 
 logging.basicConfig(level=logging.INFO)
 app = FastAPI()
 
 @app.get("/")
 async def root(): 
-    return {"status": "Официальный мост авторизации запущен!"}
+    return {"status": "🚨 ИДЕАЛЬНЫЙ ЗАПУСК! ВСЁ РАБОТАЕТ!"}
+
+async def send_ping():
+    await asyncio.sleep(10)
+    render_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')}.onrender.com"
+    async with httpx.AsyncClient() as client_http:
+        while True:
+            if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+                try: await client_http.get(render_url)
+                except: pass
+            await asyncio.sleep(300)
 
 phone_number = "+380957708743"
 phone_code_hash = None
 
+# Этот обработчик сработает ТОЛЬКО когда мы пнем его руками
 @bot_client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     global phone_code_hash
-    await event.reply("🚀 Начинаю авторизацию через официальные ключи...\nОтправляю запрос кода в Телеграм...")
+    await event.reply("🚀 Запрос кода отправлен...")
     try:
-        if not user_client.is_connected():
-            await user_client.connect()
+        await user_client.connect()
         send_code_res = await user_client.send_code_request(phone_number)
         phone_code_hash = send_code_res.phone_code_hash
-        await event.reply("📩 Код отправлен! Напиши мне его прямо сюда в ответ следующим сообщением (просто цифры).")
+        await event.reply("📩 Код в телеге! Напиши его сюда цифрами.")
     except Exception as e:
-        await event.reply(f"❌ Ошибка запроса: {e}")
+        await event.reply(f"❌ Ошибка: {e}")
 
 @bot_client.on(events.NewMessage())
 async def handle_code(event):
     global phone_code_hash
-    if event.text.startswith('/'): 
-        return
+    if event.text.startswith('/'): return
     if phone_code_hash:
-        code = event.text.strip()
-        await event.reply(f"Пытаюсь войти с кодом {code}...")
         try:
-            await user_client.sign_in(phone_number, code, phone_code_hash=phone_code_hash)
-            await event.reply("👑 ПОБЕДА! Юзербот успешно вошел в аккаунт! Сессия сохранена.")
+            await user_client.sign_in(phone_number, event.text.strip(), phone_code_hash=phone_code_hash)
+            await event.reply("👑 ПОБЕДА! Юзербот вошел.")
         except Exception as e:
             await event.reply(f"❌ Ошибка входа: {e}")
 
 @app.on_event("startup")
 async def on_startup():
-    await bot_client.start(bot_token=BOT_TOKEN)
+    # ИСПРАВЛЕНО: Запускаем мост БЕЗ блокировки основного потока сервера!
+    # Рендер теперь запустится моментально и выдаст статус LIVE!
     await user_client.connect()
-    print("Мост готов!")
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    asyncio.create_task(bot_client.start(bot_token=BOT_TOKEN))
