@@ -9,7 +9,7 @@ import httpx
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = "9202692783:AAHyqJXy3SpcoW7hteWfHWAreS1Tb-EoGjY"
-RENDER_URL = "https://onrender.com"  # Позже можешь вставить ссылку от Render
+RENDER_URL = "https://onrender.com"
 # =============================================
 
 bot = Bot(token=BOT_TOKEN)
@@ -45,41 +45,45 @@ async def start_cmd(message: types.Message):
         "📊 /ton — Курс Toncoin"
     )
 
-# ИСПРАВЛЕННАЯ ФУНКЦИЯ: Теперь адрес Binance 100% правильный
 async def get_price(coin: str):
-    # Исправили ссылку, теперь она полностью правильная и рабочая
+    # ВОТ ОН, ПОЛНЫЙ И ПРАВИЛЬНЫЙ URL:
     url = f"https://binance.com{coin.upper()}USDT"
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url)
             data = response.json()
-            # Проверяем, что Бинанс вообще вернул нам цену
             if 'price' in data:
                 return round(float(data['price']), 2)
             else:
-                logging.error(f"Бинанс вернул ошибку: {data}")
+                logging.error(f"Ответ биржи без цены: {data}")
                 return None
         except Exception as e:
-            logging.error(f"Ошибка сети: {e}")
+            logging.error(f"Ошибка сети API Binance: {e}")
             return None
 
 @dp.message(Command("btc"))
 async def btc_price(message: types.Message):
     price = await get_price("BTC")
-    if price: await message.answer(f"₿ **Bitcoin (BTC):** ${price:,}")
-    else: await message.answer("⚠️ Не удалось получить курс.")
+    if price: 
+        await message.answer(f"₿ **Bitcoin (BTC):** ${price:,}")
+    else: 
+        await message.answer("⚠️ Не удалось получить курс.")
 
 @dp.message(Command("eth"))
 async def eth_price(message: types.Message):
     price = await get_price("ETH")
-    if price: await message.answer(f"🔷 **Ethereum (ETH):** ${price:,}")
-    else: await message.answer("⚠️ Не удалось получить курс.")
+    if price: 
+        await message.answer(f"🔷 **Ethereum (ETH):** ${price:,}")
+    else: 
+        await message.answer("⚠️ Не удалось получить курс.")
 
 @dp.message(Command("ton"))
 async def ton_price(message: types.Message):
     price = await get_price("TON")
-    if price: await message.answer(f"💎 **Toncoin (TON):** ${price}")
-    else: await message.answer("⚠️ Не удалось получить курс.")
+    if price: 
+        await message.answer(f"💎 **Toncoin (TON):** ${price}")
+    else: 
+        await message.answer("⚠️ Не удалось получить курс.")
 
 @app.on_event("startup")
 async def on_startup():
@@ -89,4 +93,3 @@ async def on_startup():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
-
